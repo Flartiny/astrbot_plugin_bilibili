@@ -191,6 +191,7 @@ class Main(Star):
         render_data["url"] = f"https://space.bilibili.com/{mid}"
         render_data["qrcode"] = await create_qrcode(render_data["url"])
         try:
+            logger.info(f"{render_data}")
             src = await self.html_render(HTML_TEMPLATE, render_data, False)
             await get_and_crop_image(src, IMG_PATH)
         finally:
