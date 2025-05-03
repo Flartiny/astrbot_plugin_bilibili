@@ -87,9 +87,12 @@ class Main(Star):
             f"总共 {online['total']} 人正在观看"
         )
         render_data["image_urls"] = [info["pic"]]
-        src = await self.html_render(HTML_TEMPLATE, render_data, False)
-        await get_and_crop_image(src, IMG_PATH)
-        os.remove(src)
+        try:
+            src = await self.html_render(HTML_TEMPLATE, render_data, False)
+            await get_and_crop_image(src, IMG_PATH)
+        finally:
+            if os.path.exists(src):
+                os.remove(src)
         await message.send(MessageChain().file_image(IMG_PATH))
 
     async def save_cfg(self):
@@ -187,9 +190,12 @@ class Main(Star):
         render_data["image_urls"] = [avatar]
         render_data["url"] = f"https://space.bilibili.com/{mid}"
         render_data["qrcode"] = await create_qrcode(render_data["url"])
-        src = await self.html_render(HTML_TEMPLATE, render_data, False)
-        await get_and_crop_image(src, IMG_PATH)
-        os.remove(src)
+        try:
+            src = await self.html_render(HTML_TEMPLATE, render_data, False)
+            await get_and_crop_image(src, IMG_PATH)
+        finally:
+            if os.path.exists(src):
+                os.remove(src)
         await message.send(
             MessageChain().file_image(IMG_PATH).message(render_data["url"])
         )
@@ -295,8 +301,12 @@ class Main(Star):
                                 dyn, uid_sub_data
                             )
                             if ret:
-                                src = await self.html_render(HTML_TEMPLATE, ret, False)
-                                await get_and_crop_image(src, IMG_PATH)
+                                try:
+                                    src = await self.html_render(HTML_TEMPLATE, ret, False)
+                                    await get_and_crop_image(src, IMG_PATH)
+                                finally:
+                                    if os.path.exists(src):
+                                        os.remove(src)
                                 await self.context.send_message(
                                     sub_usr,
                                     MessageChain()
@@ -306,7 +316,6 @@ class Main(Star):
                                 self.data["bili_sub_list"][sub_usr][idx]["last"] = (
                                     dyn_id
                                 )
-                                os.remove(src)
                                 await self.save_cfg()
 
                         if lives is not None:
@@ -352,17 +361,18 @@ class Main(Star):
                                 await self.save_cfg()
                             if render_data["text"]:
                                 render_data["qrcode"] = await create_qrcode(link)
-                                src = await self.html_render(
-                                    HTML_TEMPLATE, render_data, False
-                                )
-                                await get_and_crop_image(src, IMG_PATH)
+                                try:
+                                    src = await self.html_render(HTML_TEMPLATE, render_data, False)
+                                    await get_and_crop_image(src, IMG_PATH)
+                                finally:
+                                    if os.path.exists(src):
+                                        os.remove(src)
                                 await self.context.send_message(
                                     sub_usr,
                                     MessageChain()
                                     .file_image(IMG_PATH)
                                     .message(render_data["url"]),
                                 )
-                                os.remove(src)
 
                     except Exception as e:
                         raise e
