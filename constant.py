@@ -37,5 +37,5 @@ category_mapping = {
     "美食": "FOOD",
     "偶像": "IDOL",
     "乙女": "OTOME",
-    "职场": "WORK"
+    "职场": "WORK",
 }
