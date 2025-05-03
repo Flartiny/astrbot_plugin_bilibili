@@ -10,14 +10,14 @@ from urllib.parse import urlparse
 
 async def create_render_data() -> dict:
     return {
-        "name": "",
-        "avatar": "",
-        "pendant": "",
-        "text": "",
-        "image_urls": [],
-        "qrcode": "",
-        "url": "",
-        "title":""
+        "name": "",# 图中header处用户名
+        "avatar": "",# 头像url
+        "pendant": "",# 头像框
+        "text": "",# 正文
+        "image_urls": [],# 正文图片url列表
+        "qrcode": "",# qrcode url(base64)
+        "url": "",# 用于渲染qrcode，也用于构成massagechain
+        "title":""# 标题(视频标题、动态标题)
     }
 
 

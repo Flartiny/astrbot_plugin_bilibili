@@ -74,19 +74,23 @@ class Main(Star):
         v = video.Video(bvid=bvid)
         info = await v.get_info()
         online = await v.get_online()
-        ret = f"""Billibili 视频信息：
-标题: {info['title']}
-UP主: {info['owner']['name']}
-播放量: {info['stat']['view']}
-点赞: {info['stat']['like']}
-投币: {info['stat']['coin']}
-总共 {online['total']} 人正在观看"""
-        ls = [Plain(ret), Image.fromURL(info["pic"])]
 
-        result = CommandResult()
-        result.chain = ls
-        result.use_t2i(False)
-        return result
+        render_data = await create_render_data()
+        render_data["name"] = "AstrBot"
+        render_data["avatar"] = await image_to_base64(logo_path)
+        render_data["title"] = info["title"]
+        render_data["text"] = (
+            f"UP 主: {info['owner']['name']}<br>"
+            f"播放量: {info['stat']['view']}<br>"
+            f"点赞: {info['stat']['like']}<br>"
+            f"投币: {info['stat']['coin']}<br>"
+            f"总共 {online['total']} 人正在观看"
+        )
+        render_data["image_urls"] = [info["pic"]]
+        src = await self.html_render(HTML_TEMPLATE, render_data, False)
+        await get_and_crop_image(src, IMG_PATH)
+        os.remove(src)
+        await message.send(MessageChain().file_image(IMG_PATH))
 
     async def save_cfg(self):
         with open(DATA_PATH, "w", encoding="utf-8") as f:
