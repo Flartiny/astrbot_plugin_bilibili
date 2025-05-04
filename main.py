@@ -13,6 +13,8 @@ from astrbot.api.event.filter import (
     llm_tool,
     permission_type,
     PermissionType,
+    event_message_type,
+    EventMessageType
 )
 from bilibili_api.bangumi import IndexFilter as IF
 from .constant import category_mapping
@@ -558,3 +560,32 @@ class Main(Star):
                 return render_data, dyn_id
 
         return None, None
+        
+    @event_message_type(EventMessageType.ALL)
+    async def parse_miniapp(self, event: AstrMessageEvent):
+        if not event.message_obj.message:
+            logger.warning("Received an empty message list.")
+            return
+
+        for msg_element in event.message_obj.message:
+            if hasattr(msg_element, 'type') and msg_element.type == 'Json' and hasattr(msg_element, 'data'):
+                json_string = msg_element.data
+
+                try:
+                    parsed_data = json.loads(json_string)
+                    meta = parsed_data.get('meta', {})
+                    detail_1 = meta.get('detail_1', {})
+                    title = detail_1.get('title')
+                    qqdocurl = detail_1.get('qqdocurl')
+                    desc = detail_1.get('desc')
+
+                    if title == "哔哩哔哩" and qqdocurl:
+                        ret = (
+                            f"视频: {desc}\n"
+                            f"链接: {qqdocurl}"
+                        )
+                        yield event.plain_result(ret)
+                except json.JSONDecodeError:
+                    logger.error(f"Failed to decode JSON string: {json_string}")
+                except Exception as e:
+                    logger.error(f"An error occurred during JSON processing: {e}")

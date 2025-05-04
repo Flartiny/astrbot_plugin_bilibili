@@ -36,7 +36,7 @@
         display: flex;
         align-items: center;
         flex-shrink: 0;
-        max-width: calc(100% - 60px); /* 假设二维码留出约60px空间 */
+        max-width: calc(100% - 100px); /* 假设二维码留出约60px空间 */
         overflow: hidden; /* 配合 max-width */
     }
 
@@ -101,7 +101,7 @@
         font-size: 20px;
         font-weight: 700;
         color: #fb7299;
-        margin-bottom: 4px;
+        margin-bottom: 1px;
         text-shadow: 0 1px 1px rgba(255, 193, 7, 0.2);
         white-space: nowrap;
         overflow: hidden;
@@ -112,16 +112,17 @@
         font-size: 13px;
         padding: 4px 10px;
         border-radius: 6px;
-        background: linear-gradient(45deg, #ffe0e6, #dfecf8);
+        background: linear-gradient(45deg, #ffe0e6, #f8f9fa);
         color: #7e57c2;
         font-weight: 600;
         display: inline-block;
         width: fit-content;
         max-width: 100%;
-        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        margin-top: 4px;
+        margin-top: 2px;
+        word-break: break-word;
+        word-wrap: break-word;
     }
 
     .content-wrapper {
