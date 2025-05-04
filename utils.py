@@ -87,20 +87,27 @@ def is_valid_url(url: str) -> bool:
 
 async def parse_rich_text(summary, topic):
     text = "<br>".join(filter(None, summary["text"].split("\n")))
+    # 真正的话题
     if topic:
-        topic_link = f"<a href='{topic['jump_url']}'>{topic['name']}</a>"
+        topic_link = f"<a href='{topic['jump_url']}'># {topic['name']}</a>"
         text = f"# {topic_link}<br>" + text
     # 获取富文本节点
     rich_text_nodes = summary["rich_text_nodes"]
-
     for node in rich_text_nodes:
+        # 表情包
         if node["type"] == "RICH_TEXT_NODE_TYPE_EMOJI":
             emoji_info = node["emoji"]
             placeholder = emoji_info["text"]  # 例如 "[脱单doge]"
             img_tag = f"<img src='{emoji_info['icon_url']}' alt='{placeholder}'>"
-
             # 替换文本中的占位符
             text = text.replace(placeholder, img_tag)
+        # 话题形如"#一个话题#"，实际是跳转搜索
+        elif node["type"] == "RICH_TEXT_NODE_TYPE_TOPIC":
+            topic_info = node["text"]
+            topic_url = node["jump_url"]
+            topic_tag = f"<a href='https:{topic_url}'>{topic_info}</a>"
+            # 替换文本中的占位符
+            text = text.replace(topic_info, topic_tag)
 
     return text
 
