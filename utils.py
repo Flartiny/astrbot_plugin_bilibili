@@ -6,7 +6,7 @@ import io
 import base64
 import os
 from urllib.parse import urlparse
-
+from astrbot.api import logger
 
 async def create_render_data() -> dict:
     return {
@@ -116,4 +116,5 @@ async def b23_to_bv(url: str):
                     base_url = location_url.split('?', 1)[0]
                     return base_url
     except Exception as e:
+        logger.error(f"b23_to_bv error: {e}")
         return url
