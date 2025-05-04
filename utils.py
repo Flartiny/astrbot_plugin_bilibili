@@ -109,7 +109,7 @@ async def b23_to_bv(url: str):
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
     try:
-        async with aiohttp.ClientSession.get(url= url, headers=headers, allow_redirects=False, timeout=10) as response:
+        async with aiohttp.ClientSession().get(url= url, headers=headers, allow_redirects=False, timeout=10) as response:
             if 300 <= response.status < 400:
                 location_url = response.headers.get('Location')
                 if location_url:
