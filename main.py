@@ -578,8 +578,10 @@ class Main(Star):
                     title = detail_1.get('title')
                     qqdocurl = detail_1.get('qqdocurl')
                     desc = detail_1.get('desc')
-
+                    
                     if title == "哔哩哔哩" and qqdocurl:
+                        if 'https://b23.tv' in qqdocurl:
+                            qqdocurl = await b23_to_bv(qqdocurl)
                         ret = (
                             f"视频: {desc}\n"
                             f"链接: {qqdocurl}"
