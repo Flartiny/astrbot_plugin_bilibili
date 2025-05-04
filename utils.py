@@ -116,5 +116,5 @@ async def b23_to_bv(url: str):
                     if location_url:
                         base_url = location_url.split('?', 1)[0]
                         return base_url
-    except Exception as e:
-        return url
+        except Exception as e:
+            return url
