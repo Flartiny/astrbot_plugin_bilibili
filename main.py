@@ -23,13 +23,13 @@ from typing import List, Optional
 import PIL
 from .utils import *
 
-current_dir = os.path.dirname(__file__)
-template_path = os.path.join(current_dir, "template.html")
-logo_path = os.path.join(current_dir, "Astrbot.png")
-with open(template_path, "r", encoding="utf-8") as file:
+CURRENT_DIR = os.path.dirname(__file__)
+TEMPLATE_PATH = os.path.join(CURRENT_DIR, "template.html")
+LOGO_PATH = os.path.join(CURRENT_DIR, "Astrbot.png")
+with open(TEMPLATE_PATH, "r", encoding="utf-8") as file:
     HTML_TEMPLATE = file.read()
-max_attempts = 3
-retry_delay = 2
+MAX_ATTEMPTS = 3
+RETRY_DELAY = 2
 VALID_FILTER_TYPES = {"forward", "lottery", "video"}
 DEFAULT_CFG = {
     "bili_sub_list": {}  # sub_user -> [{"uid": "uid", "last": "last_dynamic_id"}]
@@ -80,7 +80,7 @@ class Main(Star):
 
         render_data = await create_render_data()
         render_data["name"] = "AstrBot"
-        render_data["avatar"] = await image_to_base64(logo_path)
+        render_data["avatar"] = await image_to_base64(LOGO_PATH)
         render_data["title"] = info["title"]
         render_data["text"] = (
             f"UP 主: {info['owner']['name']}<br>"
@@ -91,19 +91,7 @@ class Main(Star):
         )
         render_data["image_urls"] = [info["pic"]]
 
-        for attempt in range(1, max_attempts + 1):
-            try:
-                src = await self.html_render(HTML_TEMPLATE, render_data, False)
-                if src and os.path.exists(src) and os.path.getsize(src) > 0:
-                    await get_and_crop_image(src, IMG_PATH)
-                    break
-            except Exception as e:
-                logger.error(f"Attempt: {attempt}: 渲染图片失败: {e}")
-            finally:
-                if os.path.exists(src):
-                    os.remove(src)
-            if attempt < max_attempts:
-                await asyncio.sleep(retry_delay)
+        await self.render_dynamic(render_data)
 
         await message.send(MessageChain().file_image(IMG_PATH))
 
@@ -192,7 +180,7 @@ class Main(Star):
 
         render_data = await create_render_data()
         render_data["name"] = "AstrBot"
-        render_data["avatar"] = await image_to_base64(logo_path)
+        render_data["avatar"] = await image_to_base64(LOGO_PATH)
         # render_data["pendant"] = pendant
         render_data["text"] = (
             f"📣 订阅成功！<br>"
@@ -203,19 +191,7 @@ class Main(Star):
         render_data["url"] = f"https://space.bilibili.com/{mid}"
         render_data["qrcode"] = await create_qrcode(render_data["url"])
 
-        for attempt in range(1, max_attempts + 1):
-            try:
-                src = await self.html_render(HTML_TEMPLATE, render_data, False)
-                if src and os.path.exists(src) and os.path.getsize(src) > 0:
-                    await get_and_crop_image(src, IMG_PATH)
-                    break
-            except Exception as e:
-                logger.error(f"Attempt: {attempt}: 渲染图片失败: {e}")
-            finally:
-                if os.path.exists(src):
-                    os.remove(src)
-            if attempt < max_attempts:
-                await asyncio.sleep(retry_delay)
+        await self.render_dynamic(render_data)
 
         await message.send(
             MessageChain().file_image(IMG_PATH).message(render_data["url"])
@@ -322,19 +298,7 @@ class Main(Star):
                                 dyn, uid_sub_data
                             )
                             if ret:
-                                for attempt in range(1, max_attempts + 1):
-                                    try:
-                                        src = await self.html_render(HTML_TEMPLATE, ret, False)
-                                        if src and os.path.exists(src) and os.path.getsize(src) > 0:
-                                            await get_and_crop_image(src, IMG_PATH)
-                                            break
-                                    except Exception as e:
-                                        logger.error(f"Attempt: {attempt}: 渲染图片失败: {e}")
-                                    finally:
-                                        if os.path.exists(src):
-                                            os.remove(src)
-                                    if attempt < max_attempts:
-                                        await asyncio.sleep(retry_delay)
+                                await self.render_dynamic(ret)
 
                                 await self.context.send_message(
                                     sub_usr,
@@ -369,7 +333,7 @@ class Main(Star):
 
                             render_data = await create_render_data()
                             render_data["name"] = "AstrBot"
-                            render_data["avatar"] = await image_to_base64(logo_path)
+                            render_data["avatar"] = await image_to_base64(LOGO_PATH)
                             render_data["title"] = live_name
 
                             if live_room.get("liveStatus", "") and not is_live:
@@ -395,19 +359,7 @@ class Main(Star):
                                 await self.save_cfg()
                             if render_data["text"]:
                                 render_data["qrcode"] = await create_qrcode(link)
-                                for attempt in range(1, max_attempts + 1):
-                                    try:
-                                        src = await self.html_render(HTML_TEMPLATE, render_data, False)
-                                        if src and os.path.exists(src) and os.path.getsize(src) > 0:
-                                            await get_and_crop_image(src, IMG_PATH)
-                                            break
-                                    except Exception as e:
-                                        logger.error(f"Attempt: {attempt}: 渲染图片失败: {e}")
-                                    finally:
-                                        if os.path.exists(src):
-                                            os.remove(src)
-                                    if attempt < max_attempts:
-                                        await asyncio.sleep(retry_delay)
+                                await self.render_dynamic(render_data)
                                 await self.context.send_message(
                                     sub_usr,
                                     MessageChain()
@@ -416,7 +368,8 @@ class Main(Star):
                                 )
 
                     except Exception as e:
-                        raise e
+                        # raise e
+                        logger.error(f"处理订阅者 {sub_usr} 的 UP主 {uid_sub_data.get('uid', '未知UID')} 时发生错误: {e}\n{traceback.format_exc()}")
 
     @permission_type(PermissionType.ADMIN)
     @command("全局删除")
@@ -507,16 +460,16 @@ class Main(Star):
                 cover_url = archive["cover"]
 
                 try:
-                    text = item["modules"]["module_dynamic"]["desc"]["text"]
+                    content_text = item["modules"]["module_dynamic"]["desc"]["text"]
                 except (TypeError, KeyError):
-                    text = None  # 或默认值
+                    content_text = None  # 或默认值
 
-                if text:
-                    text = await parse_rich_text(
+                if content_text:
+                    rich_text = await parse_rich_text(
                         item["modules"]["module_dynamic"]["desc"],
                         item["modules"]["module_dynamic"]["topic"],
                     )
-                    render_data["text"] = f"投稿了新视频<br>{text}"
+                    render_data["text"] = f"投稿了新视频<br>{rich_text}"
                 else:
                     render_data["text"] = f"投稿了新视频<br>"
                 render_data["title"] = title
@@ -558,6 +511,8 @@ class Main(Star):
                 render_data["text"] = await parse_rich_text(summary, topic)
                 render_data["title"] = opus["title"]
                 render_data["image_urls"] = [pic["url"] for pic in opus["pics"][:9]]
+                if not render_data["image_urls"]:
+                    render_data["image_urls"] = [await image_to_base64(LOGO_PATH)]
                 url = f"https:{jump_url}"
                 render_data["qrcode"] = await create_qrcode(url)
                 render_data["url"] = url
@@ -596,3 +551,18 @@ class Main(Star):
                     logger.error(f"Failed to decode JSON string: {json_string}")
                 except Exception as e:
                     logger.error(f"An error occurred during JSON processing: {e}")
+    
+    async def render_dynamic(self, render_data: dict):
+        for attempt in range(1, MAX_ATTEMPTS + 1):
+            try:
+                src = await self.html_render(HTML_TEMPLATE, render_data, False)
+                if src and os.path.exists(src) and os.path.getsize(src) > 0:
+                    await get_and_crop_image(src, IMG_PATH)
+                    break
+            except Exception as e:
+                logger.error(f"Attempt: {attempt}: 渲染图片失败: {e}")
+            finally:
+                if os.path.exists(src):
+                    os.remove(src)
+            if attempt < MAX_ATTEMPTS:
+                await asyncio.sleep(RETRY_DELAY)
