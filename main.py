@@ -317,7 +317,7 @@ class Main(Star):
                         lives = await usr.get_live_info()
                         if dyn is not None:
                             # 获取最新一条动态
-                            # dyn_id - last
+                            # dyn_id <-> last
                             ret, dyn_id = await self.parse_last_dynamic(
                                 dyn, uid_sub_data
                             )
@@ -342,6 +342,11 @@ class Main(Star):
                                     .file_image(IMG_PATH)
                                     .message(ret["url"]),
                                 )
+                                self.data["bili_sub_list"][sub_usr][idx]["last"] = (
+                                    dyn_id
+                                )
+                                await self.save_cfg()
+                            elif dyn_id is not None:
                                 self.data["bili_sub_list"][sub_usr][idx]["last"] = (
                                     dyn_id
                                 )
