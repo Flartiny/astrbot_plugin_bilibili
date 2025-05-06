@@ -432,7 +432,7 @@ class Main(Star):
 
             dyn_id = item["id_str"]
             render_data = await create_render_data()
-
+            logger.info(f"type: {item["type"]}")
             if item["type"] == "DYNAMIC_TYPE_FORWARD":
                 if "forward" in filter_types:
                     logger.info(f"转发类型在过滤列表 {filter_types} 中。")
@@ -445,6 +445,7 @@ class Main(Star):
                 if render_forward["image_urls"]:  # 检查列表是否非空
                     render_forward["image_urls"] = [forward["image_urls"][0]]  # 保留第一项
                 render_data.append(render_forward)
+                logger.info(f"{render_data}")
                 return render_data, dyn_id
             elif item["type"] == "DYNAMIC_TYPE_AV" or item["type"] == "DYNAMIC_TYPE_DRAW" or item["type"] == "DYNAMIC_TYPE_WORD":
                 # 视频类型过滤
