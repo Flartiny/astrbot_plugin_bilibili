@@ -444,7 +444,7 @@ class Main(Star):
                 render_forward = await create_render_data()
                 render_forward = await self.video_and_draw(item["orig"], render_forward, is_forward=True)
                 if render_forward["image_urls"]:  # 检查列表是否非空
-                    render_forward["image_urls"] = [forward["image_urls"][0]]  # 保留第一项
+                    render_forward["image_urls"] = [render_forward["image_urls"][0]]  # 保留第一项
                 render_data.append(render_forward)
                 logger.info(f"{render_data}")
                 return render_data, dyn_id
@@ -456,6 +456,13 @@ class Main(Star):
                 # 图文类型过滤
                 opus = item["modules"]["module_dynamic"]["major"]["opus"]
                 summary_text = opus["summary"]["text"]
+
+                if (
+                    opus["summary"]["rich_text_nodes"][0].get("text") == "互动抽奖"
+                    and "lottery" in filter_types
+                ):
+                    logger.info(f"互动抽奖在过滤列表 {filter_types} 中。")
+                    return None, dyn_id
                 if filter_regex:  # 检查列表是否存在且不为空
                     for regex_pattern in filter_regex:
                         try:
@@ -643,13 +650,6 @@ class Main(Star):
             summary = opus["summary"]
             jump_url = opus["jump_url"]
             topic = item["modules"]["module_dynamic"]["topic"]
-
-            if (
-                opus["summary"]["rich_text_nodes"][0].get("text") == "互动抽奖"
-                and "lottery" in filter_types
-            ):
-                logger.info(f"互动抽奖在过滤列表 {filter_types} 中。")
-                return None
 
             render_data["text"] = await parse_rich_text(summary, topic)
             render_data["title"] = opus["title"]
