@@ -460,7 +460,6 @@ class Main(Star):
                 if render_forward["image_urls"]:  # 检查列表是否非空
                     render_forward["image_urls"] = [render_forward["image_urls"][0]]  # 保留第一项
                 render_data["forward"] = render_forward
-                logger.info(f"{render_data}")
                 return render_data, dyn_id
             elif item["type"] == "DYNAMIC_TYPE_DRAW" or item["type"] == "DYNAMIC_TYPE_WORD":
                 # 图文类型过滤
