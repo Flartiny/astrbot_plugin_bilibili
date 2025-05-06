@@ -415,8 +415,6 @@ class Main(Star):
         filter_regex = data.get("filter_regex", [])
         items = dyn["items"]
 
-        render_data = await create_render_data()
-
         for item in items:
             if "modules" not in item:
                 continue
@@ -433,63 +431,29 @@ class Main(Star):
                 return None, None
 
             dyn_id = item["id_str"]
+            render_data = await create_render_data()
 
-            # 用户名称
-            name = item["modules"]["module_author"]["name"]
-            avatar = item["modules"]["module_author"].get("face")
-
-            render_data["name"] = name
-            render_data["avatar"] = avatar
-            render_data["pendant"] = item["modules"]["module_author"]["pendant"][
-                "image"
-            ]
-            # 转发类型
             if item["type"] == "DYNAMIC_TYPE_FORWARD":
                 if "forward" in filter_types:
                     logger.info(f"转发类型在过滤列表 {filter_types} 中。")
                     return None, dyn_id  # 返回 None 表示不推送，但更新 dyn_id
                 # todo
-            # 投稿视频
-            elif item["type"] == "DYNAMIC_TYPE_AV":
+                render_data = await create_render_data()
+                render_data = await self.video_and_draw(item, render_data)
+                render_forward = await create_render_data()
+                render_forward = await self.video_and_draw(item["orig"], render_forward, is_forward=True)
+                if render_forward["image_urls"]:  # 检查列表是否非空
+                    render_forward["image_urls"] = [forward["image_urls"][0]]  # 保留第一项
+                render_data.append(render_forward)
+                return render_data, dyn_id
+            elif item["type"] == "DYNAMIC_TYPE_AV" or item["type"] == "DYNAMIC_TYPE_DRAW" or item["type"] == "DYNAMIC_TYPE_WORD":
+                # 视频类型过滤
                 if "video" in filter_types:
                     logger.info(f"视频类型在过滤列表 {filter_types} 中。")
                     return None, dyn_id
-                archive = item["modules"]["module_dynamic"]["major"]["archive"]
-                title = archive["title"]
-                bv = archive["bvid"]
-                cover_url = archive["cover"]
-
-                try:
-                    content_text = item["modules"]["module_dynamic"]["desc"]["text"]
-                except (TypeError, KeyError):
-                    content_text = None  # 或默认值
-
-                if content_text:
-                    rich_text = await parse_rich_text(
-                        item["modules"]["module_dynamic"]["desc"],
-                        item["modules"]["module_dynamic"]["topic"],
-                    )
-                    render_data["text"] = f"投稿了新视频<br>{rich_text}"
-                else:
-                    render_data["text"] = f"投稿了新视频<br>"
-                render_data["title"] = title
-                render_data["image_urls"] = [cover_url]
-                url = f"https://www.bilibili.com/video/{bv}"
-                render_data["qrcode"] = await create_qrcode(url)
-                render_data["url"] = url
-                logger.info(f"返回视频动态 {dyn_id}。")
-                return render_data, dyn_id
-            # 图文
-            elif (
-                item["type"] == "DYNAMIC_TYPE_DRAW"
-                or item["type"] == "DYNAMIC_TYPE_WORD"
-            ):
+                # 图文类型过滤
                 opus = item["modules"]["module_dynamic"]["major"]["opus"]
-                summary = opus["summary"]
-                summary_text = summary["text"]
-                jump_url = opus["jump_url"]
-                topic = item["modules"]["module_dynamic"]["topic"]
-
+                summary_text = opus["summary"]["text"]
                 if filter_regex:  # 检查列表是否存在且不为空
                     for regex_pattern in filter_regex:
                         try:
@@ -501,23 +465,84 @@ class Main(Star):
                         except re.error as e:
                             continue  # 如果正则表达式本身有误，跳过这个正则继续检查下一个
 
-                if (
-                    opus["summary"]["rich_text_nodes"][0].get("text") == "互动抽奖"
-                    and "lottery" in filter_types
-                ):
-                    logger.info(f"互动抽奖在过滤列表 {filter_types} 中。")
-                    return None, dyn_id
-
-                render_data["text"] = await parse_rich_text(summary, topic)
-                render_data["title"] = opus["title"]
-                render_data["image_urls"] = [pic["url"] for pic in opus["pics"][:9]]
-                if not render_data["image_urls"]:
-                    render_data["image_urls"] = [await image_to_base64(LOGO_PATH)]
-                url = f"https:{jump_url}"
-                render_data["qrcode"] = await create_qrcode(url)
-                render_data["url"] = url
-                logger.info(f"返回图文动态 {dyn_id}。")
+                render_data = self.video_and_draw(item, render_data) 
                 return render_data, dyn_id
+            
+            # 转发类型
+            # if item["type"] == "DYNAMIC_TYPE_FORWARD":
+            #     if "forward" in filter_types:
+            #         logger.info(f"转发类型在过滤列表 {filter_types} 中。")
+            #         return None, dyn_id  # 返回 None 表示不推送，但更新 dyn_id
+            #     # todo
+            # # 投稿视频
+            # elif item["type"] == "DYNAMIC_TYPE_AV":
+            #     if "video" in filter_types:
+            #         logger.info(f"视频类型在过滤列表 {filter_types} 中。")
+            #         return None, dyn_id
+            #     archive = item["modules"]["module_dynamic"]["major"]["archive"]
+            #     title = archive["title"]
+            #     bv = archive["bvid"]
+            #     cover_url = archive["cover"]
+
+            #     try:
+            #         content_text = item["modules"]["module_dynamic"]["desc"]["text"]
+            #     except (TypeError, KeyError):
+            #         content_text = None  # 或默认值
+
+            #     if content_text:
+            #         rich_text = await parse_rich_text(
+            #             item["modules"]["module_dynamic"]["desc"],
+            #             item["modules"]["module_dynamic"]["topic"],
+            #         )
+            #         render_data["text"] = f"投稿了新视频<br>{rich_text}"
+            #     else:
+            #         render_data["text"] = f"投稿了新视频<br>"
+            #     render_data["title"] = title
+            #     render_data["image_urls"] = [cover_url]
+            #     url = f"https://www.bilibili.com/video/{bv}"
+            #     render_data["qrcode"] = await create_qrcode(url)
+            #     render_data["url"] = url
+            #     logger.info(f"返回视频动态 {dyn_id}。")
+            #     return render_data, dyn_id
+            # # 图文
+            # elif (
+            #     item["type"] == "DYNAMIC_TYPE_DRAW"
+            #     or item["type"] == "DYNAMIC_TYPE_WORD"
+            # ):
+            #     opus = item["modules"]["module_dynamic"]["major"]["opus"]
+            #     summary = opus["summary"]
+            #     summary_text = summary["text"]
+            #     jump_url = opus["jump_url"]
+            #     topic = item["modules"]["module_dynamic"]["topic"]
+
+            #     if filter_regex:  # 检查列表是否存在且不为空
+            #         for regex_pattern in filter_regex:
+            #             try:
+            #                 if re.search(regex_pattern, summary_text):
+            #                     logger.info(
+            #                         f"图文动态 {dyn_id} 的 summary 匹配正则 '{regex_pattern}'。"
+            #                     )
+            #                     return None, dyn_id  # 匹配到任意一个正则就返回
+            #             except re.error as e:
+            #                 continue  # 如果正则表达式本身有误，跳过这个正则继续检查下一个
+
+            #     if (
+            #         opus["summary"]["rich_text_nodes"][0].get("text") == "互动抽奖"
+            #         and "lottery" in filter_types
+            #     ):
+            #         logger.info(f"互动抽奖在过滤列表 {filter_types} 中。")
+            #         return None, dyn_id
+
+            #     render_data["text"] = await parse_rich_text(summary, topic)
+            #     render_data["title"] = opus["title"]
+            #     render_data["image_urls"] = [pic["url"] for pic in opus["pics"][:9]]
+            #     if not render_data["image_urls"]:
+            #         render_data["image_urls"] = [await image_to_base64(LOGO_PATH)]
+            #     url = f"https:{jump_url}"
+            #     render_data["qrcode"] = await create_qrcode(url)
+            #     render_data["url"] = url
+            #     logger.info(f"返回图文动态 {dyn_id}。")
+            #     return render_data, dyn_id
 
         return None, None
         
@@ -566,3 +591,72 @@ class Main(Star):
                     os.remove(src)
             if attempt < MAX_ATTEMPTS:
                 await asyncio.sleep(RETRY_DELAY)
+    
+    async def video_and_draw(self, item, render_data, is_forward=False):
+        # 用户名称
+        name = item["modules"]["module_author"]["name"]
+        avatar = item["modules"]["module_author"].get("face")
+
+        render_data["name"] = name
+        render_data["avatar"] = avatar
+        render_data["pendant"] = item["modules"]["module_author"]["pendant"][
+            "image"
+        ]
+        # 视频
+        if item["type"] == "DYNAMIC_TYPE_AV":
+            
+            archive = item["modules"]["module_dynamic"]["major"]["archive"]
+            title = archive["title"]
+            bv = archive["bvid"]
+            cover_url = archive["cover"]
+
+            try:
+                content_text = item["modules"]["module_dynamic"]["desc"]["text"]
+            except (TypeError, KeyError):
+                content_text = None  # 或默认值
+
+            if content_text:
+                rich_text = await parse_rich_text(
+                    item["modules"]["module_dynamic"]["desc"],
+                    item["modules"]["module_dynamic"]["topic"],
+                )
+                render_data["text"] = f"投稿了新视频<br>{rich_text}"
+            else:
+                render_data["text"] = f"投稿了新视频<br>"
+            render_data["title"] = title
+            render_data["image_urls"] = [cover_url]
+            render_data["text"] = f"转发了新视频<br>{render_data['text']}"
+            if not is_forward:
+                url = f"https://www.bilibili.com/video/{bv}"
+                render_data["qrcode"] = await create_qrcode(url)
+                render_data["url"] = url
+            # logger.info(f"返回视频动态 {dyn_id}。")
+            return render_data
+        # 图文
+        elif (
+            item["type"] == "DYNAMIC_TYPE_DRAW"
+            or item["type"] == "DYNAMIC_TYPE_WORD"
+        ):
+            opus = item["modules"]["module_dynamic"]["major"]["opus"]
+            summary = opus["summary"]
+            jump_url = opus["jump_url"]
+            topic = item["modules"]["module_dynamic"]["topic"]
+
+            if (
+                opus["summary"]["rich_text_nodes"][0].get("text") == "互动抽奖"
+                and "lottery" in filter_types
+            ):
+                logger.info(f"互动抽奖在过滤列表 {filter_types} 中。")
+                return None
+
+            render_data["text"] = await parse_rich_text(summary, topic)
+            render_data["title"] = opus["title"]
+            render_data["image_urls"] = [pic["url"] for pic in opus["pics"][:9]]
+            if not render_data["image_urls"]:
+                render_data["image_urls"] = [await image_to_base64(LOGO_PATH)]
+            if not is_forward:
+                url = f"https:{jump_url}"
+                render_data["qrcode"] = await create_qrcode(url)
+                render_data["url"] = url
+            # logger.info(f"返回图文动态 {dyn_id}。")
+            return render_data

@@ -153,24 +153,137 @@
         background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
     }
 
+    /* --- Forward Content Styles --- */
+    .forward-content {
+        flex: 1; /* 占据 content-wrapper 剩余空间 */
+        display: flex; /* 使用 Flexbox 布局 */
+        flex-direction: column; /* 内部元素垂直排列 */
+        background-color: #e3dfdf; /* 淡灰色背景 */
+        /* padding: 15px 20px; */ /* 移除整体 padding，在子元素上控制 */
+        overflow: hidden; /* 隐藏内部溢出 */
+        box-sizing: border-box;
+        min-height: 0;
+        border-radius: 18px;
+        border-top: 1px solid #eee;
+    }
+    .forward-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 20px 0px; /* 调整内边距 */
+        flex-shrink: 0; /* 不收缩 */
+    }
+    .forward-avatar-container {
+        width:  64px;
+        height: 64px;
+        position: relative;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+    .forward-avatar {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        transform: scale(0.6) translate(-1.5px, 0px);
+        z-index: 1;
+    }
+    .forward-pendant {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        transform: scale(1);
+        pointer-events: none;
+        z-index: 2;
+    }
+    .forward-name {
+        font-weight: 600;
+        color: #444;
+        font-size: 15px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .forward-title {
+        font-weight: bold;
+        color: #333;
+        font-size: 24px;
+        margin-top: 0px;
+        margin-bottom: 0px;
+        padding: 0 24px; /* 调整内边距 */
+        flex-shrink: 0; /* 不收缩 */
+    }
+
+    .forward-text {
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.6;
+        color: #0b0b0b; /* 接近黑色 */
+        margin-bottom: 12px;
+        padding: 0 26px; /* 保持用户指定的内边距 */
+        word-wrap: break-word; /* 保留换行 */
+        flex-shrink: 0; /* 保持不收缩 */
+        overflow: hidden;            /* 必须：隐藏溢出的内容 */
+        text-overflow: ellipsis;     /* 尝试显示省略号（对 line-clamp 是必要的） */
+        display: -webkit-box;
+        -webkit-line-clamp: 4;       /* 限制为 4 行 */
+        -webkit-box-orient: vertical;
+    }
+
+    .forward-text img {
+        display: inline-block;    /* 让图片像文字一样排列 */
+        height: 1.3em;            /* 高度与字体大小相关 (基于 14px) */
+        width: auto;              /* 宽度自适应 */
+        vertical-align: text-bottom; /* 垂直对齐 */
+        margin: 0 0.15em;         /* 左右间距 */
+    }
+    .forward-text a {
+        text-decoration: none;    /* 移除下划线 */
+        color: #178BCF;           /* 与主内容一致的链接颜色 */
+        font-weight: bold;  
+    }
+    /* --- End added styles for .forward-text children --- */
+
+    .forward-image {
+        flex: 1; /* 关键：占据所有剩余垂直空间 */
+        display: flex; /* 使用 flex 居中内部图片 */
+        justify-content: center;
+        align-items: center;
+        overflow: hidden; /* 隐藏图片溢出的部分 */
+        padding: 10px 20px 15px; /* 给图片周围留出边距 */
+        min-height: 0; /* 配合 flex:1 */
+    }
+
+    .forward-image img {
+        display: block;
+        max-width: 100%;  /* 图片最大宽度为容器宽度 */
+        max-height: 100%; /* 图片最大高度为容器高度 */
+        width: auto;      /* 宽度自适应 */
+        height: auto;     /* 高度自适应 */
+        object-fit: contain; /* 保持宽高比，完整显示图片，可能留白 */
+        border-radius: 8px; /* 图片圆角 */
+    }
+    /* --- End Forward Content Styles --- */    
+
     .rich-text-content {
         font-size: 16px;        /* 保持文本样式 */
         line-height: 1.6;       /* 保持文本样式 */
         color: #2c3e50;         /* 保持文本样式 */
         margin: 0;              /* 移除默认间距 */
-        padding: 12px 0;        /* 保持内边距 */
+        padding: 12px 10px 5px;        /* 保持内边距 */
         background: linear-gradient(to right, #f0f4fc 50%, #f9f7ff 50%); /* 应用背景 */
         background-size: 200% 100%;
         padding-left: 12px;     /* 保持左内边距 */
         border-left: 2px solid #e8eaf6; /* 应用边框 */
         border-radius: 18px;    /* 应用圆角 */
 
-        /* 主要高度限制：移除 line-clamp，只用 max-height */
         overflow: hidden; /* 再次确认隐藏溢出 */
         max-height: calc(1.6em * 5); /* 保持 N 行高度限制 */
-        /* -webkit-box-orient: vertical; */
-        /* -webkit-line-clamp: 5; */
-        /* text-overflow: ellipsis; */
+        text-overflow: ellipsis;     /* 尝试显示省略号（对 line-clamp 是必要的） */
+        display: -webkit-box;
+        -webkit-line-clamp: 5;       /* 限制为 4 行 */
+        -webkit-box-orient: vertical;
+        word-wrap: break-word; /* 保留换行 */
     }
 
     /* 新增：针对富文本中图片的样式 */
@@ -212,6 +325,7 @@
         padding: 20px; /* 给单张图更多边距 */
         grid-auto-rows: auto;
     }
+    
     .image-gallery.count-1 img {
        /* 让图片自适应容器大小，保持比例 */
        max-width: 100%;
@@ -220,7 +334,6 @@
        height: auto; /* 高度自适应 */
        object-fit: contain;
     }
-
 
     .image-gallery img {
         display: block;
@@ -305,13 +418,43 @@
             </div>
         </div>
 
-        {% if image_urls %}
-        {# 使用 length 过滤器给画廊添加对应的 CSS 类 #}
-        <div class="image-gallery count-{{ image_urls | length }}">
-            {% for img_url in image_urls %}
-            <img src="{{ img_url }}" alt="dynamic image">
-            {% endfor %}
-        </div>
+        {% if forward and forward.name %}
+            <div class="forward-content">
+                <div class="forward-header">
+                    {% if forward.avatar %}
+                    <div class="forward-avatar-container">
+                        <img src="{{ forward.avatar }}" alt="forward avatar" class="forward-avatar">
+                        {% if forward.pendant %}
+                        <img src="{{ forward.pendant }}" alt="forward pendant" class="forward-pendant">
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    <span class="forward-name">{{ forward.name }}</span>
+                </div>
+                {% if forward.title %}
+                    <div class="forward-title">{{ forward.title }}</div>
+                {% endif %}
+                {% if forward.text %}
+                    <div class="forward-text">
+                        {{ forward.text | safe }}
+                    </div>
+                {% endif %}
+
+                 {% if forward.image_urls %}
+                    <div class="forward-single-image-container">
+                        {% for img_url in forward.image_urls %}
+                        <img src="{{ forward.image_urls }}" alt="forward image">
+                        {% endfor %}
+                    </div>
+                 {% endif %}
+            </div>
+
+        {% elif image_urls %}
+            <div class="image-gallery count-{{ image_urls | length }}">
+                {% for img_url in image_urls %}
+                <img src="{{ img_url }}" alt="dynamic image">
+                {% endfor %}
+            </div>
         {% endif %}
     </div>
 
