@@ -432,7 +432,8 @@ class Main(Star):
 
             dyn_id = item["id_str"]
             render_data = await create_render_data()
-            logger.info(f"type: {item["type"]}")
+            type_debug = item["type"]
+            logger.info(f"type: {type_debug}")
             if item["type"] == "DYNAMIC_TYPE_FORWARD":
                 if "forward" in filter_types:
                     logger.info(f"转发类型在过滤列表 {filter_types} 中。")
