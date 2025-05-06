@@ -440,9 +440,12 @@ class Main(Star):
                     return None, dyn_id  # 返回 None 表示不推送，但更新 dyn_id
                 # todo
                 render_data = await create_render_data()
-                render_data = await self.video_and_draw(item, render_data)
+                render_data = await self.build_render(item, render_data)
+                render_data["url"] = f"https://t.bilibili.com/{dyn_id}"
+                render_data["qrcode"] = await create_qrcode(render_data["url"])
+
                 render_forward = await create_render_data()
-                render_forward = await self.video_and_draw(item["orig"], render_forward, is_forward=True)
+                render_forward = await self.build_render(item["orig"], render_forward, is_forward=True)
                 if render_forward["image_urls"]:  # 检查列表是否非空
                     render_forward["image_urls"] = [render_forward["image_urls"][0]]  # 保留第一项
                 render_data.append(render_forward)
@@ -474,7 +477,7 @@ class Main(Star):
                         except re.error as e:
                             continue  # 如果正则表达式本身有误，跳过这个正则继续检查下一个
 
-                render_data = self.video_and_draw(item, render_data) 
+                render_data = await self.build_render(item, render_data) 
                 return render_data, dyn_id
             
             # 转发类型
@@ -601,7 +604,7 @@ class Main(Star):
             if attempt < MAX_ATTEMPTS:
                 await asyncio.sleep(RETRY_DELAY)
     
-    async def video_and_draw(self, item, render_data, is_forward=False):
+    async def build_render(self, item, render_data, is_forward=False):
         # 用户名称
         name = item["modules"]["module_author"]["name"]
         avatar = item["modules"]["module_author"].get("face")
@@ -634,7 +637,6 @@ class Main(Star):
                 render_data["text"] = f"投稿了新视频<br>"
             render_data["title"] = title
             render_data["image_urls"] = [cover_url]
-            render_data["text"] = f"转发了新视频<br>{render_data['text']}"
             if not is_forward:
                 url = f"https://www.bilibili.com/video/{bv}"
                 render_data["qrcode"] = await create_qrcode(url)
@@ -662,3 +664,17 @@ class Main(Star):
                 render_data["url"] = url
             # logger.info(f"返回图文动态 {dyn_id}。")
             return render_data
+        # 转发类型主体部分
+        elif item["type"] == "DYNAMIC_TYPE_FORWARD":
+            try:
+                content_text = item["modules"]["module_dynamic"]["desc"]["text"]
+            except (TypeError, KeyError):
+                content_text = None
+            if content_text:
+                rich_text = await parse_rich_text(
+                    item["modules"]["module_dynamic"]["desc"],
+                    item["modules"]["module_dynamic"]["topic"],
+                )
+                render_data["text"] = f"{rich_text}"
+            return render_data
+        return render_data
