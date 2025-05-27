@@ -608,7 +608,7 @@ class Main(Star):
             jump_url = opus["jump_url"]
             topic = item["modules"]["module_dynamic"]["topic"]
 
-            render_data["summary"] = summary
+            render_data["summary"] = summary["text"]
             render_data["type"] = item["type"]
             render_data["text"] = await parse_rich_text(summary, topic)
             render_data["title"] = opus["title"]
