@@ -16,7 +16,6 @@
         "description": "render_as_image",
         "type": "bool",
         "hint": "是否以图片形式渲染输出",
-        "default": true,
-        "invisible": true
+        "default": true
     }
 }

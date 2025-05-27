@@ -191,12 +191,17 @@ class Main(Star):
         render_data["image_urls"] = [avatar]
         render_data["url"] = f"https://space.bilibili.com/{mid}"
         render_data["qrcode"] = await create_qrcode(render_data["url"])
-
-        await self.render_dynamic(render_data)
-
-        await message.send(
-            MessageChain().file_image(IMG_PATH).message(render_data["url"])
-        )
+        if self.rai:
+            await self.render_dynamic(render_data)
+            await message.send(
+                MessageChain().file_image(IMG_PATH).message(render_data["url"])
+            )
+        else:
+            chain = [
+                Plain(render_data["text"]),
+                Image.fromURL(avatar),
+            ]
+            return CommandResult(chain=chain, use_t2i_=False)
 
     @command("订阅列表")
     async def sub_list(self, message: AstrMessageEvent):
@@ -299,14 +304,22 @@ class Main(Star):
                                 dyn, uid_sub_data
                             )
                             if ret:
-                                await self.render_dynamic(ret)
+                                if not self.rai and (ret["type"] == "DYNAMIC_TYPE_DRAW" or ret["type" == "DYNAMIC_TYPE_WORD"]):
+                                    name = ret["name"]
+                                    ls = [Plain(f"📣 UP 主 「{name}」 发布了新图文动态:\n")]
+                                    ls.append(Plain(ret["summary"]))
+                                    for pic in ret["image_urls"]:
+                                        ls.append(Image.fromURL(pic))
+                                    await self.context.send_message(sub_usr, CommandResult(chain=ls).use_t2i(False))
+                                else:
+                                    await self.render_dynamic(ret)
+                                    await self.context.send_message(
+                                        sub_usr,
+                                        MessageChain()
+                                        .file_image(IMG_PATH)
+                                        .message(ret["url"]),
+                                    )
 
-                                await self.context.send_message(
-                                    sub_usr,
-                                    MessageChain()
-                                    .file_image(IMG_PATH)
-                                    .message(ret["url"]),
-                                )
                                 self.data["bili_sub_list"][sub_usr][idx]["last"] = (
                                     dyn_id
                                 )
@@ -336,13 +349,13 @@ class Main(Star):
                             render_data["name"] = "AstrBot"
                             render_data["avatar"] = await image_to_base64(LOGO_PATH)
                             render_data["title"] = live_name
+                            render_data["url"] = link
+                            render_data["image_urls"] = [cover_url]
 
                             if live_room.get("liveStatus", "") and not is_live:
                                 render_data["text"] = (
                                     f"📣 你订阅的UP 「{user_name}」 开播了！"
                                 )
-                                render_data["url"] = link
-                                render_data["image_urls"] = [cover_url]
                                 self.data["bili_sub_list"][sub_usr][idx]["is_live"] = (
                                     True
                                 )
@@ -351,8 +364,6 @@ class Main(Star):
                                 render_data["text"] = (
                                     f"📣 你订阅的UP 「{user_name}」 下播了！"
                                 )
-                                render_data["url"] = link
-                                render_data["image_urls"] = [cover_url]
 
                                 self.data["bili_sub_list"][sub_usr][idx]["is_live"] = (
                                     False
@@ -369,7 +380,6 @@ class Main(Star):
                                 )
 
                     except Exception as e:
-                        # raise e
                         logger.error(
                             f"处理订阅者 {sub_usr} 的 UP主 {uid_sub_data.get('uid', '未知UID')} 时发生错误: {e}\n{traceback.format_exc()}"
                         )
@@ -598,6 +608,7 @@ class Main(Star):
             jump_url = opus["jump_url"]
             topic = item["modules"]["module_dynamic"]["topic"]
 
+            render_data["summary"] = summary
             render_data["text"] = await parse_rich_text(summary, topic)
             render_data["title"] = opus["title"]
             render_data["image_urls"] = [pic["url"] for pic in opus["pics"][:9]]
