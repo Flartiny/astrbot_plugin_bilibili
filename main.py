@@ -609,6 +609,7 @@ class Main(Star):
             topic = item["modules"]["module_dynamic"]["topic"]
 
             render_data["summary"] = summary
+            render_data["type"] = item["type"]
             render_data["text"] = await parse_rich_text(summary, topic)
             render_data["title"] = opus["title"]
             render_data["image_urls"] = [pic["url"] for pic in opus["pics"][:9]]
