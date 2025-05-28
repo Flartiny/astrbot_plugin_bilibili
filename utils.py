@@ -61,7 +61,7 @@ async def create_qrcode(url):
     return url
 
 
-async def get_and_crop_image(src, output_path, width=640):
+async def get_and_crop_image(src, output_path, width=700):
     if src.startswith(("http://", "https://")):
         async with aiohttp.ClientSession() as session:
             async with session.get(src, timeout=10) as response:
@@ -99,7 +99,7 @@ async def parse_rich_text(summary, topic):
         if node["type"] == "RICH_TEXT_NODE_TYPE_EMOJI":
             emoji_info = node["emoji"]
             placeholder = emoji_info["text"]  # 例如 "[脱单doge]"
-            img_tag = f"<img src='{emoji_info['icon_url']}' alt='{placeholder}'>"
+            img_tag = f"<img src='{emoji_info['icon_url']}'>"
             # 替换文本中的占位符
             text = text.replace(placeholder, img_tag)
         # 话题形如"#一个话题#"，实际是跳转搜索

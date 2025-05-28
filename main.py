@@ -635,3 +635,27 @@ class Main(Star):
                 render_data["text"] = f"{rich_text}"
             return render_data
         return render_data
+
+    @permission_type(PermissionType.ADMIN)
+    @command("执行测试")
+    async def excute(self, message: AstrMessageEvent):
+        render_data = await create_render_data()
+        render_data["name"] = "AstrBot"
+        render_data["avatar"] = await image_to_base64(LOGO_PATH)
+        render_data["title"] = "测试"
+        render_data["text"] = """
+        测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本测试文本
+        """
+        image = await image_to_base64(LOGO_PATH)
+        for _ in range(10):
+            render_data["image_urls"].append(image)
+        render_data["qrcode"] = await create_qrcode("https://www.bilibili.com")
+        render_data["url"] = "https://www.bilibili.com"
+        try:
+            src = await self.html_render(HTML_TEMPLATE, render_data, False)
+            await message.send(MessageChain().file_image(src))
+        except Exception as e:
+            logger.error(f"渲染图片失败: {e}")
+        finally:
+            if os.path.exists(src):
+                os.remove(src)
