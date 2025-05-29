@@ -56,13 +56,14 @@ class Main(Star):
 
         self.context = context
         self.rai = self.cfg.get("rai", True)
+        self.enable_parse_miniapp = self.cfg.get("enable_parse_miniapp", True)
 
         if not os.path.exists(DATA_PATH):
             with open(DATA_PATH, "w", encoding="utf-8-sig") as f:
                 f.write(json.dumps(DEFAULT_CFG, ensure_ascii=False, indent=4))
         with open(DATA_PATH, "r", encoding="utf-8-sig") as f:
             self.data = json.load(f)
-        # asyncio.create_task(self.dynamic_listener())
+
         self.dynamic_listener_task = asyncio.create_task(self.dynamic_listener())
 
     @regex(BV)
@@ -305,13 +306,22 @@ class Main(Star):
                                 dyn, uid_sub_data
                             )
                             if ret:
-                                if not self.rai and (ret["type"] == "DYNAMIC_TYPE_DRAW" or ret["type" == "DYNAMIC_TYPE_WORD"]):
+                                if not self.rai and (
+                                    ret["type"] == "DYNAMIC_TYPE_DRAW"
+                                    or ret["type" == "DYNAMIC_TYPE_WORD"]
+                                ):
                                     name = ret["name"]
-                                    ls = [Plain(f"📣 UP 主 「{name}」 发布了新图文动态:\n")]
+                                    ls = [
+                                        Plain(
+                                            f"📣 UP 主 「{name}」 发布了新图文动态:\n"
+                                        )
+                                    ]
                                     ls.append(Plain(ret["summary"]))
                                     for pic in ret["image_urls"]:
                                         ls.append(Image.fromURL(pic))
-                                    await self.context.send_message(sub_usr, CommandResult(chain=ls).use_t2i(False))
+                                    await self.context.send_message(
+                                        sub_usr, CommandResult(chain=ls).use_t2i(False)
+                                    )
                                 else:
                                     await self.render_dynamic(ret)
                                     await self.context.send_message(
@@ -521,17 +531,18 @@ class Main(Star):
 
     @event_message_type(EventMessageType.ALL)
     async def parse_miniapp(self, event: AstrMessageEvent):
-        if not event.message_obj.message:
-            logger.warning("Received an empty message list.")
-            return
+        if self.enable_parse_miniapp:
+            if not event.message_obj.message:
+                logger.warning("Received an empty message list.")
+                return
 
-        for msg_element in event.message_obj.message:
-            if (
-                hasattr(msg_element, "type")
-                and msg_element.type == "Json"
-                and hasattr(msg_element, "data")
-            ):
-                json_string = msg_element.data
+            for msg_element in event.message_obj.message:
+                if (
+                    hasattr(msg_element, "type")
+                    and msg_element.type == "Json"
+                    and hasattr(msg_element, "data")
+                ):
+                    json_string = msg_element.data
 
                 try:
                     parsed_data = json.loads(json_string)
@@ -667,6 +678,10 @@ class Main(Star):
             try:
                 await self.dynamic_listener_task
             except asyncio.CancelledError:
-                logger.info("bilibili dynamic_listener task was successfully cancelled during terminate.")
+                logger.info(
+                    "bilibili dynamic_listener task was successfully cancelled during terminate."
+                )
             except Exception as e:
-                logger.error(f"Error awaiting cancellation of dynamic_listener task: {e}")
+                logger.error(
+                    f"Error awaiting cancellation of dynamic_listener task: {e}"
+                )

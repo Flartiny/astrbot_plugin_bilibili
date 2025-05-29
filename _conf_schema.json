@@ -15,7 +15,13 @@
     "rai": {
         "description": "render_as_image",
         "type": "bool",
-        "hint": "是否以图片形式渲染输出",
+        "hint": "是否以图片形式渲染输出(仅对图文动态生效)",
+        "default": true
+    },
+    "enable_parse_miniapp": {
+        "description": "enable_parse_miniapp",
+        "type": "bool",
+        "hint": "是否解析小程序",
         "default": true
     }
 }
