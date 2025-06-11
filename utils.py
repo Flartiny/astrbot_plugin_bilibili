@@ -127,6 +127,7 @@ async def bili_html_render(tmpl_str: str, tmpl_data: dict, api_url: str):
         "options": {
             "full_page": True,
             "type": "png",
+            "scale": "device",
         },
     }
     url = f"{api_url}/generate"

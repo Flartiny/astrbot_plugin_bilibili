@@ -9,7 +9,7 @@ DEFAULT_CFG = {
     "bili_sub_list": {}  # sub_user -> [{"uid": "uid", "last": "last_dynamic_id", ...}]
 }
 TEMPLATE_PATH = os.path.join(CURRENT_DIR, "template.html")
-IMG_PATH = "data/temp.jpg"
+IMG_PATH = "data/temp.png"
 MAX_ATTEMPTS = 3
 RETRY_DELAY = 2
 
