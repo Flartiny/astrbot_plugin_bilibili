@@ -15,12 +15,13 @@ class Renderer:
     负责将动态数据渲染成图片。
     """
 
-    def __init__(self, star_instance: Star, rai: bool):
+    def __init__(self, star_instance: Star, rai: bool, t2i_url: str):
         """
         初始化渲染器。
         """
         self.star = star_instance
         self.rai = rai
+        self.t2i_url = t2i_url
 
     async def render_dynamic(self, render_data: Dict[str, Any]):
         """
@@ -30,9 +31,14 @@ class Renderer:
         for attempt in range(1, MAX_ATTEMPTS + 1):
             render_output = None
             try:
-                render_output = await self.star.html_render(
-                    HTML_TEMPLATE, render_data, False
-                )
+                if not self.t2i_url:
+                    render_output = await self.star.html_render(
+                        HTML_TEMPLATE, render_data, False
+                    )
+                else:
+                    render_output = await bili_html_render(
+                        HTML_TEMPLATE, render_data, self.t2i_url
+                    )
                 if (
                     render_output
                     and os.path.exists(render_output)

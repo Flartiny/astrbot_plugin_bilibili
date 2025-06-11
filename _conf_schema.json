@@ -23,5 +23,11 @@
         "type": "bool",
         "hint": "是否解析小程序",
         "default": true
+    },
+    "bili_t2i":{
+        "description": "bili_t2i",
+        "type": "string",
+        "hint": "解放清晰度限制。文转图服务url，为空则使用Astrbot默认配置",
+        "default": ""
     }
 }

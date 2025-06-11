@@ -37,9 +37,10 @@ class Main(Star):
         self.interval_mins = float(self.cfg.get("interval_mins", 20))
         self.rai = self.cfg.get("rai", True)
         self.enable_parse_miniapp = self.cfg.get("enable_parse_miniapp", True)
+        self.t2i_url = self.cfg.get("bili_t2i", "")
 
         self.data_manager = DataManager()
-        self.renderer = Renderer(self, self.rai)
+        self.renderer = Renderer(self, self.rai, self.t2i_url)
         self.bili_client = BiliClient(self.cfg.get("sessdata"))
         self.dynamic_listener = DynamicListener(
             context=self.context,
